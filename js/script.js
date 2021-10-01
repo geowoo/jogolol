@@ -1,11 +1,49 @@
 window.onload = function(){
     iniciarJogo();
-    personagem = personagem(60, 60, '#f00', 10,120);
+   
+    document.querySelector("#direita").addEventListener("mousedown", function(){
+        direita();
+    });
+
+    document.querySelector("#esquerda").addEventListener("mousedown", function(){
+        esquerda();
+    });
+
+    document.querySelector("#subir").addEventListener("mousedown", function(){
+        subir();
+    });
+
+    document.querySelector("#descer").addEventListener("mousedown", function(){
+        descer();
+    });
+
+    document.querySelector("#direita").addEventListener("mouseup", function(){
+        frear();
+    });
+
+    document.querySelector("#esquerda").addEventListener("mouseup", function(){
+        frear();
+    });
+
+    document.querySelector("#subir").addEventListener("mouseup", function(){
+        frear();
+    });
+
+    document.querySelector("#descer").addEventListener("mouseup", function(){
+        frear();
+    });
 }
+
+var personagemObj;
+
+var obstaculo = []; 
+
+var pontos; 
 
 function iniciarJogo(){
     areaJogo.start();
-
+    personagemObj = new componente('#f00',10,120,30,30);
+    //obstaculo = new componente('pink',300,120,200,10);
 }
 
 let areaJogo = {
@@ -14,20 +52,134 @@ let areaJogo = {
         this.canvas.width = 600,
         this.canvas.height = 400,
         this.context = this.canvas.getContext("2d");
-        document.body.insertBefore(this.canvas, document.body.hasChildNodes[0]);
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frame = 0;
+        this.intervalo = setInterval(atualizaAreaJogo, 20);
+    },
+    limpar: function(){
+        this.context.clearRect(0,0, this.canvas.width, this.canvas.height);
+    },
+    parar: function(){
+        clearInterval(this.interval);
 
     }
 
 }
 
-function personagem(largura, altura, cor, x, y){
+function contarIntervalos(n){
+    if((areaJogo.frame / n) % 1 == 0){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+function componente(cor, x, y, largura, altura, ){
     this.altura = altura,
     this.largura = largura,
     this.x = x,
     this.y = y,
-    contexto = areaJogo.context
-    contexto.fillStyle = cor, 
-    contexto.fillRect(this.x, this.y, this.altura, this.largura,);
+    this.velocidadeX = 0,
+    this.velocidadeY = 0,
+    this.atualiza = function(){
+        contexto = areaJogo.context;
+        contexto.fillStyle = cor,
+        contexto.fillRect(this.x, this.y, this.altura, this.largura); 
+    },
+
+    this.novaPosicao = function(){
+        this.x += this.velocidadeX;
+        this.y += this.velocidadeY;
+
+    },
+
+    this.bater = function(obj){
+        let esquerda = this.x;
+        let direita = this.x + this.largura;
+        let superior = this.y;
+        let inferior = this.y + this.altura;
+
+        let objEsquerda = obj.x;
+        let objDireita = obj.x + obj.altura;
+        let objSuperior = obj.y;
+        let objInferior = obj.y + obj.largura;
+
+        let batida = true;
+
+        if(
+            (inferior < objSuperior) ||
+            (superior > objInferior) ||
+            (direita < objEsquerda)  ||
+            (esquerda > objDireita)  
+        ){
+            batida = false;
+        
+
+        }
+
+            return batida;
+
+    }
 
 
+}
+function atualizaAreaJogo(){
+    let x, y;
+
+    for(i = 0; i < obstaculo.length; i += 1){
+        if(personagemObj.bater(obstaculo[i])){
+            areaJogo.Parar();
+            return;
+        }
+      
+    }
+        areaJogo.limpar();
+        areaJogo.frame += 1;
+        if(areaJogo.frame == 1 || contarIntervalos(150)){
+            x = areaJogo.canvas.width;
+            minAltura = 20;
+            maxAltura  = 200;
+            altura = Math.floor(Math.random()*(maxAltura-minAltura+1)+minAltura);
+             minVazio = 50;
+             maxVazio = 200;
+             vazio = Math.floor(Math.random()*(maxVazio-minVazio+1)+maxVazio);
+            obstaculo.push(new componente('pink',x,0,altura,10));
+            obstaculo.push(new componente('pink',x,altura+vazio,x - altura - vazio,10));
+        }
+
+        for(i = 0; i < obstaculo.length;i++){
+            obstaculo[i].x += -1;
+            obstaculo[i].atualiza();
+
+        }
+
+     personagemObj.novaPosicao();
+     personagemObj.atualiza();
+
+        }
+    
+
+function subir(){
+    personagemObj.velocidadeY -= 1;
+
+}
+
+function descer(){
+    personagemObj.velocidadeY += 1;
+
+}
+
+function esquerda(){
+    personagemObj.velocidadeX -= 1;
+
+}
+
+function direita(){
+    personagemObj.velocidadeX += 1;
+
+}
+
+function frear(){
+    personagemObj.velocidadeX = 0;
+    personagemObj.velocidadeY = 0;
 }
